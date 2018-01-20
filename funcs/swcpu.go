@@ -1,11 +1,12 @@
 package funcs
 
 import (
+	"log"
+	"time"
+
 	"github.com/gaochao1/sw"
 	"github.com/gaochao1/swcollector/g"
 	"github.com/open-falcon/common/model"
-	"log"
-	"time"
 )
 
 type SwCpu struct {
@@ -24,7 +25,10 @@ func CpuMetrics() (L []*model.MetricValue) {
 	}
 
 	for _, ch := range chs {
-		swCpu := <-ch
+		swCpu, ok := <-ch
+		if !ok {
+			continue
+		}
 		L = append(L, GaugeValueIp(time.Now().Unix(), swCpu.Ip, "switch.CpuUtilization", swCpu.CpuUtil))
 	}
 
@@ -37,6 +41,8 @@ func cpuMetrics(ip string, ch chan SwCpu) {
 	cpuUtili, err := sw.CpuUtilization(ip, g.Config().Switch.Community, g.Config().Switch.SnmpTimeout, g.Config().Switch.SnmpRetry)
 	if err != nil {
 		log.Println(err)
+		close(ch)
+		return
 	}
 
 	swCpu.Ip = ip

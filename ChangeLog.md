@@ -1,5 +1,57 @@
 # Changelog #
+## 4.0.6.3 ##
+#### bug修复 ####
+1. 现在当 tag 为空时，debug 应该会正确打印对应的日志了
+2. 修复了一个当自定义 oid 超过 2 项，且 oid 不正确无法采集到信息时，swcollector 会异常崩溃的 bug
+3. 修复了一个当 speedlimit 使用指定值（而非自动采用接口速率 ifSpeed)作为限制时，接口的 speedPercent 无法正确采集的 bug
+#### 改进 ####
+1. 配置热重载模式调整，现在 reload 后会在下一个采集周期时重载配置。并清空 AliveIp，因此配置中移除的 IP 可以正确生效了
+2. swcollector 自带的 http 页，现在应该能更快速的显示了
+3. swcollector 自带的 http 页，现在支持更多交换机的 sysmodle 了
+4. cpu 和 mem 现在对于老版本的 H3C (H3C Comware Platform Software Comware software, Version 3.10)，应该也能正确采集到了
+
+
+# Changelog #
+## 4.0.6.2 ##
+#### 新功能 ####
+1. 增加了动态重载配置的功能，详见 [README](https://github.com/gaochao1/swcollector/blob/master/README.md})
+#### bug修复 ####
+1. 现在当 tag 为空时，debug 的时候应该不会重复的打印日志了
+#### 改进 ####
+1. 现在自定义 Oid 采集时，可以支持 string 类型的返回了。系统会强制转换成 float64 上报，如果转换出错则抛出错误
+2. 现在对交换机类型的判断时，也会采取重试（由配置中的 retry 决定重试次数）来规避偶发性的异常了。
+3. 现在对 Linux 的 snmp 监控能够采集到 cpu 和 mem 了
+
+
+## 4.0.6.1 ##
+#### bug修复 ####
+1. 现在当采集异常 Channel 关闭时，应该会正常的抛弃而不会给 transfer 上报一个空的 endpoint 了
+
+## 4.0.6 ##
+#### 新功能 ####
+1. 增加接口速率的采集
+	* switch.if.Speed
+2. 增加接口流量百分比的采集
+	* switch.if.InSpeedPercent
+	* switch.if.OutSpeedPercent
+3. 增加 dell 交换机的内置 cpu/mem 采集
+4. 现在支持自定义 oid 的采集了
+5. 现在支持自定义交换机 host，以 host 作为 endpoint 上报
+6. 现在支持地址段的方式配置采集列表，例如 ```"192.168.56.102-192.168.56.120"```
+7. 现在对于单台交换机的多个指标采集，也支持并发限制了。以减少对一些 snmp 响应较低的交换机采集时，由于并发太多产生的超时问题。
+ 
+#### 改进 ####
+1. Counter 类型的数据上报逻辑大幅更改。现在 swcollector 将在本地计算出相应的数值，再以 Gauge 类型上报。如果出现异常的数据，则在本地直接抛弃。因此最终呈现的绘图至多只会出现断点，而不再会出现极端的异常图形。
+2. 优化了 gosnmp 的端口采集，现在 gosnmp 端口采集异常的超时情况应该大幅度降低了
+3. 现在如果并发采集的某个 goroutine 的耗时超过了采集周期，则该 goroutine 会超时退出，避免异常时大量 goroutine 耗尽资源
+4. 移除了对 Cisco_ASA 的防火墙连接数内置采集，此类需求今后可通过自定义 oid 方式采集。
+
+#### bug修复 ####
+1. 现在当 cpu 和 mem 采集异常的时候，应该能正确的抛弃。而不是上报一个 0 了
+
+
 ## 3.2.1.1 ##
+#### 新功能 ####
 1. debugmetric 现在支持配置多个 endpoint 和 metric 了
 ## 3.2.1 ##
 #### 新功能 ####
@@ -21,7 +73,7 @@
 
 6. 现在能够通过 gosnmp 的配置选项,选择采用 gosnmp 还是 snmpwalk 进行数据采集了。两者效率相仿，snmpwalk稍微多占用点系统资源
 
-### 改进 ###
+#### 改进 ####
 1. 优化了 gosnmp 的端口采集，略微控制了一下并发速率，现在 gosnmp 采集端口超时的概率，应该有所降低了
 2. 代码优化，删除了部分无关代码（比如 hbs 相关的部分……)
 3. 部分日志的输出可读性更强了

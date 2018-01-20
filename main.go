@@ -23,9 +23,15 @@ func main() {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
-
 	g.ParseConfig(*cfg)
-
+	if g.Config().SwitchHosts.Enabled {
+		hostcfg := g.Config().SwitchHosts.Hosts
+		g.ParseHostConfig(hostcfg)
+	}
+	if g.Config().CustomMetrics.Enabled {
+		custMetrics := g.Config().CustomMetrics.Template
+		g.ParseCustConfig(custMetrics)
+	}
 	g.InitRootDir()
 	g.InitLocalIps()
 	g.InitRpcClients()
@@ -35,6 +41,7 @@ func main() {
 		os.Exit(0)
 	}
 
+	funcs.NewLastifMap()
 	funcs.BuildMappers()
 
 	cron.Collect()
